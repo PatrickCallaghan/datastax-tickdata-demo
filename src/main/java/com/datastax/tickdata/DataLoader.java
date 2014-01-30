@@ -1,0 +1,77 @@
+package com.datastax.tickdata;
+
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.BlockingQueue;
+
+import org.mortbay.log.Log;
+
+import au.com.bytecode.opencsv.CSVReader;
+
+import com.datastax.tickdata.model.TickData;
+
+public class DataLoader {
+
+	private static final CharSequence EXCHANGEDATA = "exchangedata";
+
+	private BlockingQueue<List<TickData>> queueTickData;
+
+	public DataLoader(BlockingQueue<List<TickData>> queueTickData) {
+		this.queueTickData = queueTickData;
+	}
+
+	public List<String> getExchangeData() {
+
+		List<String> allExchangeSymbols = new ArrayList<String>();
+
+		// Process all the files from the csv directory
+		File cvsDir = new File(".", "src/main/resources/csv");
+
+		File[] files = cvsDir.listFiles(new FileFilter() {
+			public boolean accept(File file) {
+				return file.isFile();
+			}
+		});
+
+		for (File file : files) {
+			try {
+				if (file.getName().contains(EXCHANGEDATA)){
+					allExchangeSymbols.addAll(this.getExchangeData(file));
+				}
+
+			} catch (FileNotFoundException e) {
+				Log.warn("Could not process file : " + file.getAbsolutePath(), e);
+			} catch (IOException e) {
+				Log.warn("Could not process file : " + file.getAbsolutePath(), e);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+		return allExchangeSymbols;
+	}
+
+	private List<String> getExchangeData(File file) throws IOException, InterruptedException {
+
+		CSVReader reader = new CSVReader(new FileReader(file.getAbsolutePath()), CSVReader.DEFAULT_SEPARATOR,
+				CSVReader.DEFAULT_QUOTE_CHARACTER, 1);
+		String[] items = null;
+		List<String> exchangeItems = new ArrayList<String>();
+
+		List<TickData> list = new ArrayList<TickData>();
+
+		while ((items = reader.readNext()) != null) {
+			String exchange = items[0].trim();
+			String symbol = items[1].trim();
+
+			exchangeItems.add(exchange + "-" + symbol);
+		}
+
+		reader.close();
+		return exchangeItems;
+	}
+}
