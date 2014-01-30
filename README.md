@@ -1,4 +1,4 @@
-Reference Data example
+Tick Data example
 ========================================================
 
 This is a simple example of using C* as a tick data store for financial market data.
