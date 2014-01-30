@@ -21,7 +21,6 @@ The queries that we want to be able to run is
 
 	select * from historic_data where exchange ='AMEX' and symbol='ELG' and date > '20014-01-01 14:45:00' and date < '2014-01-01 15:00:00';
 
-3
 ## Data 
 
 The data is generated from a tick generator which uses a csv file to create random values from AMEX, NYSE and NASDAQ.
