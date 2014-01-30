@@ -30,7 +30,7 @@ public class Main {
 
 		String contactPointsStr = PropertyHelper.getProperty("contactPoints", "localhost");
 		String noOfThreadsStr = PropertyHelper.getProperty("noOfThreads", "10");
-		String noOfTicksStr = PropertyHelper.getProperty("noOfTicks", TEN_MILLION);
+		String noOfTicksStr = PropertyHelper.getProperty("noOfTicks", ONE_MILLION);
 		
 		TickDataDao dao = new TickDataDao(contactPointsStr.split(","));
 		
@@ -61,7 +61,7 @@ public class Main {
 		tickGenerator.generatorTicks(queueTickData, noOfTicks);
 		
 		while(!queueTickData.isEmpty() ){
-			sleep(5);
+			sleep(1);
 		}		
 		
 		timer.end();
@@ -79,7 +79,7 @@ public class Main {
 				Log.info(new Date().toString() + "-Generated " + tickGenerator.getTicksGenerated() + " ticks");
 				Log.info("Messages left to send " + (queueTickData.size()));
 			}
-		}, 1, 1, TimeUnit.SECONDS);		
+		}, 1, 5, TimeUnit.SECONDS);		
 	}
 
 	class TickDataWriter implements Runnable {
