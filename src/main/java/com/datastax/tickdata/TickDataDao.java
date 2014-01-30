@@ -1,9 +1,11 @@
 package com.datastax.tickdata;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+
+import org.joda.time.DateTime;
+import org.mortbay.log.Log;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
@@ -38,14 +40,20 @@ public class TickDataDao {
 		List<ResultSetFuture> results = new ArrayList<ResultSetFuture>();
 		
 		for (TickData tickData : list) {
-
-			boundStmt.setString("symbol", tickData.getKey());
-			boundStmt.setDate("date", new Date(System.currentTimeMillis()));
+			
+			DateTime dateTime = DateTime.now();		
+			String month = fillNumber(dateTime.getMonthOfYear());
+			String day = fillNumber(dateTime.getDayOfMonth());
+			
+			String symbolWithDate = tickData.getKey() + "-" + dateTime.getYear() + "-" + month + "-" + day;
+			
+			boundStmt.setString("symbol", symbolWithDate);
+			boundStmt.setDate("date", dateTime.toDate());
 			boundStmt.setDouble("value", tickData.getValue());
 
 			results.add(session.executeAsync(boundStmt));
 			
-			TOTAL_POINTS.incrementAndGet();
+			TOTAL_POINTS.incrementAndGet();			
 		}
 		
 		//Wait till we have everything back.
@@ -62,6 +70,10 @@ public class TickDataDao {
 			}
 		}
 		return;
+	}
+
+	private String fillNumber(int num) {
+		return num < 10 ? "0" + num : "" + num;
 	}
 
 	public long getTotalPoints() {
