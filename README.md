@@ -17,9 +17,9 @@ The queries that we want to be able to run is
 	
 1. Get all the tick data for a symbol in an exchange (in a time range)
 
-	select * from tick_data where symbol ='NASDAQ-NFLX-2014-01-31';
-
-	select * from tick_data where symbol ='NASDAQ-NFLX-2014-01-31' and date > '2014-01-01 14:45:00' and date < '2014-01-01 15:00:00';
+     select * from tick_data where symbol ='NASDAQ-NFLX-2014-01-31';
+     
+     select * from tick_data where symbol ='NASDAQ-NFLX-2014-01-31' and date > '2014-01-01 14:45:00' and date < '2014-01-01 15:00:00';
 
 ## Data 
 
