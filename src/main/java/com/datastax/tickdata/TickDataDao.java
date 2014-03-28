@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.joda.time.DateTime;
-import org.mortbay.log.Log;
 
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
@@ -22,13 +21,16 @@ public class TickDataDao {
 	private static String keyspaceName = "datastax_tickdata_demo";
 	private static String tableNameTick = keyspaceName + ".tick_data";
 
-	private static final String INSERT_INTO_TICK = "Insert into " + tableNameTick + " (symbol,date,value) values (?,?,?);";
+	private static final String INSERT_INTO_TICK = "Insert into " + tableNameTick + " (symbol,date,value) values (?,now(),?);";
 
 	private PreparedStatement insertStmtTick;
 
 	public TickDataDao(String[] contactPoints) {
 
-		Cluster cluster = Cluster.builder().addContactPoints(contactPoints).build();
+		Cluster cluster = Cluster.builder().addContactPoints(contactPoints)
+				//.withLoadBalancingPolicy(new TokenAwarePolicy(new DCAwareRoundRobinPolicy("DC1")))
+				.build();
+		
 		this.session = cluster.connect();
 
 		this.insertStmtTick = session.prepare(INSERT_INTO_TICK);		
@@ -48,7 +50,7 @@ public class TickDataDao {
 			String symbolWithDate = tickData.getKey() + "-" + dateTime.getYear() + "-" + month + "-" + day;
 			
 			boundStmt.setString("symbol", symbolWithDate);
-			boundStmt.setDate("date", dateTime.toDate());
+			//boundStmt.setDate("date", dateTime.toDate());
 			boundStmt.setDouble("value", tickData.getValue());
 
 			results.add(session.executeAsync(boundStmt));
@@ -69,6 +71,7 @@ public class TickDataDao {
 				}
 			}
 		}
+		
 		return;
 	}
 

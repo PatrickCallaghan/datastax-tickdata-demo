@@ -9,9 +9,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
 
-import org.mortbay.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.demo.utils.PropertyHelper;
 import com.datastax.demo.utils.Timer;
@@ -19,6 +19,7 @@ import com.datastax.tickdata.engine.TickGenerator;
 import com.datastax.tickdata.model.TickData;
 
 public class Main {
+	private static Logger logger = LoggerFactory.getLogger(Main.class);
 
 	private String ONE_MILLION = "1000000";
 	private String TEN_MILLION = "10000000";
@@ -43,8 +44,8 @@ public class Main {
 		ExecutorService executor = Executors.newFixedThreadPool(noOfThreads);
 		Timer timer = new Timer();
 		timer.start();
-		
-		Log.info("Processing " + NumberFormat.getInstance().format(noOfTicks) + " ticks with " + noOfThreads + " threads");
+			
+		logger.info("Processing " + NumberFormat.getInstance().format(noOfTicks) + " ticks with " + noOfThreads + " threads");
 		
 		for (int i = 0; i < noOfThreads; i++) {
 			executor.execute(new TickDataWriter(dao, queueTickData));
@@ -65,7 +66,7 @@ public class Main {
 		}		
 		
 		timer.end();
-		Log.info("Data Loading took " + timer.getTimeTakenSeconds() + " secs. Total Points " + dao.getTotalPoints() + " (" + (dao.getTotalPoints()/timer.getTimeTakenSeconds()) + " a sec)");
+		logger.info("Data Loading took " + timer.getTimeTakenSeconds() + " secs. Total Points " + dao.getTotalPoints() + " (" + (dao.getTotalPoints()/timer.getTimeTakenSeconds()) + " a sec)");
 		
 		System.exit(0);
 	}
@@ -76,8 +77,8 @@ public class Main {
 		scheduledExecutorService.scheduleWithFixedDelay(new Runnable() {
 			@Override
 			public void run() {
-				Log.info(new Date().toString() + "-Generated " + tickGenerator.getTicksGenerated() + " ticks");
-				Log.info("Messages left to send " + (queueTickData.size()));
+				logger.info(new Date().toString() + "-Generated " + tickGenerator.getTicksGenerated() + " ticks");
+				logger.info("Messages left to send " + (queueTickData.size()));
 			}
 		}, 1, 5, TimeUnit.SECONDS);		
 	}

@@ -1,19 +1,18 @@
 package com.datastax.tickdata.engine;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
-import org.mortbay.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.datastax.tickdata.model.TickData;
 
 public class TickGenerator {
 
+	private static Logger logger = LoggerFactory.getLogger(TickGenerator.class);
+	
 	private long TOTAL_TICKS = 0;
 
 	private List<TickValue> tickValueList = new ArrayList<TickValue>();
@@ -54,6 +53,12 @@ public class TickGenerator {
 				sleepMillis(10);
 			}
 		}
+		try {
+			queueTickData.put(new ArrayList<TickData>(flusher));
+		} catch (InterruptedException e) {
+			e.printStackTrace();			
+		}
+		flusher.clear();
 	}
 
 	private void sleepMillis(int i) {

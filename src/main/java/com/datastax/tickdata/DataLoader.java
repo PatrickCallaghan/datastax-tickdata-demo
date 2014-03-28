@@ -9,7 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
-import org.mortbay.log.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import au.com.bytecode.opencsv.CSVReader;
 
@@ -17,6 +18,8 @@ import com.datastax.tickdata.model.TickData;
 
 public class DataLoader {
 
+	private static Logger logger = LoggerFactory.getLogger(DataLoader.class);
+	
 	private static final CharSequence EXCHANGEDATA = "exchangedata";
 
 	private BlockingQueue<List<TickData>> queueTickData;
@@ -45,9 +48,9 @@ public class DataLoader {
 				}
 
 			} catch (FileNotFoundException e) {
-				Log.warn("Could not process file : " + file.getAbsolutePath(), e);
+				logger.warn("Could not process file : " + file.getAbsolutePath(), e);
 			} catch (IOException e) {
-				Log.warn("Could not process file : " + file.getAbsolutePath(), e);
+				logger.warn("Could not process file : " + file.getAbsolutePath(), e);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
