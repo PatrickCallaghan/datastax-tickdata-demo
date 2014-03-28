@@ -32,6 +32,8 @@ To increase the throughput, add nodes to the cluster. Cassandra will scale linea
 ## Schema Setup
 Note : This will drop the keyspace "datastax_tickdata_demo" and create a new one. All existing data will be lost. 
 
+The schema can be found in src/main/resources/cql/
+
 To specify contact points use the contactPoints command line parameter e.g. '-DcontactPoints=192.168.25.100,192.168.25.101'
 The contact points can take mulitple points in the IP,IP,IP (no spaces).
 
@@ -45,9 +47,9 @@ To run the insert
     
 The default is to use 5 threads but this can be changed by using the noOfThreads property. 
 
-An example of running this with 30 threads, 10,000,000 ticks and some custom contact points would be 
+An example of running this with 3 threads, 10,000,000 ticks and some custom contact points would be 
 
-	mvn clean compile exec:java -Dexec.mainClass="com.datastax.tickdata.Main" -DcontactPoints=cassandra1 -DnoOfThreads=30 -DnoOfTicks=10000000
+	mvn clean compile exec:java -Dexec.mainClass="com.datastax.tickdata.Main" -DcontactPoints=cassandra1 -DnoOfThreads=3 -DnoOfTicks=10000000
 	
 To remove the tables and the schema, run the following.
 
