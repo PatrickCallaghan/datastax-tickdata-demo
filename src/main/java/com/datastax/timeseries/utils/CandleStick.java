@@ -1,11 +1,14 @@
 package com.datastax.timeseries.utils;
 
+import org.joda.time.DateTime;
+
 public class CandleStick {
 
 	private double high;
 	private double low;
 	private double open;
 	private double close;
+	private long startTime;
 	
 	public CandleStick(double high, double low, double open, double close) {
 		super();
@@ -26,8 +29,12 @@ public class CandleStick {
 	public double getClose() {
 		return close;
 	}
+	public void setStartTime(long startTime) {
+		this.startTime =startTime;		
+	}
+
 	@Override
 	public String toString() {
-		return "CandleStick [high=" + high + ", low=" + low + ", open=" + open + ", close=" + close + "]";
+		return "CandleStick for " + new DateTime(startTime).toString() + " [high=" + high + ", low=" + low + ", open=" + open + ", close=" + close + "]";
 	}
 }
