@@ -1,18 +1,25 @@
 package com.datastax.tickdata;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.joda.time.DateTime;
 
+import cern.colt.list.DoubleArrayList;
+import cern.colt.list.LongArrayList;
+
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
+import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.tickdata.model.TickData;
+import com.datastax.timeseries.utils.TimeSeries;
 
 public class TickDataDao {
 
@@ -22,19 +29,76 @@ public class TickDataDao {
 	private static String tableNameTick = keyspaceName + ".tick_data";
 
 	private static final String INSERT_INTO_TICK = "Insert into " + tableNameTick + " (symbol,date,value) values (?,now(),?);";
+	private static final String SELECT_FROM_TICK_RANGE = "Select symbol, dateOf(date) as date, value from " + tableNameTick + " where symbol = ? and date > maxTimeuuid(?) and date < minTimeuuid(?)";
+	private static final String SELECT_FROM_TICK = "Select symbol, dateOf(date) as date, value from " + tableNameTick + " where symbol = ?";
 
 	private PreparedStatement insertStmtTick;
+	private PreparedStatement selectStmtTick;
+	private PreparedStatement selectRangeStmtTick;
 
 	public TickDataDao(String[] contactPoints) {
 
-		Cluster cluster = Cluster.builder().addContactPoints(contactPoints)
-				//.withLoadBalancingPolicy(new TokenAwarePolicy(new DCAwareRoundRobinPolicy("DC1")))
-				.build();
+		Cluster cluster = Cluster.builder().addContactPoints(contactPoints).build();
 		
 		this.session = cluster.connect();
 
 		this.insertStmtTick = session.prepare(INSERT_INTO_TICK);		
 		this.insertStmtTick.setConsistencyLevel(ConsistencyLevel.ONE);
+		this.selectStmtTick = session.prepare(SELECT_FROM_TICK);		
+		this.selectStmtTick.setConsistencyLevel(ConsistencyLevel.ONE);
+		this.selectRangeStmtTick = session.prepare(SELECT_FROM_TICK_RANGE);		
+		this.selectRangeStmtTick.setConsistencyLevel(ConsistencyLevel.ONE);
+	}
+	
+	public TimeSeries getTickData(String symbol){
+		
+		BoundStatement boundStmt = new BoundStatement(this.selectStmtTick);
+		boundStmt.setString(0, symbol);
+		
+		ResultSet resultSet = session.execute(boundStmt);		
+		Iterator<Row> iterator = resultSet.iterator();
+		
+		DoubleArrayList values = new DoubleArrayList();
+		LongArrayList dates = new LongArrayList();
+
+		while (iterator.hasNext()) {
+			Row row = iterator.next();
+
+			dates.add(row.getDate("date").getTime());
+			values.add(row.getDouble("value"));
+		}
+
+		dates.trimToSize();
+		values.trimToSize();
+		
+		return new TimeSeries(symbol, dates.elements(), values.elements());
+	}
+
+	
+	public TimeSeries getTickData(String symbol, long startTime, long endTime){
+		
+		BoundStatement boundStmt = new BoundStatement(this.selectRangeStmtTick);
+		boundStmt.setString(0, symbol);
+		boundStmt.setDate(1, new DateTime(startTime).toDate());
+		boundStmt.setDate(2, new DateTime(endTime).toDate());
+		
+		ResultSet resultSet = session.execute(boundStmt);		
+		Iterator<Row> iterator = resultSet.iterator();
+		
+		DoubleArrayList values = new DoubleArrayList();
+		LongArrayList dates = new LongArrayList();
+
+		while (iterator.hasNext()) {
+			Row row = iterator.next();
+
+			dates.add(row.getDate("date").getTime());
+			values.add(row.getDouble("value"));
+		}
+
+		dates.trimToSize();
+		values.trimToSize();
+		
+		return new TimeSeries(symbol, dates.elements(), values.elements());
 	}
 
 	public void insertTickData(List<TickData> list) throws Exception{
