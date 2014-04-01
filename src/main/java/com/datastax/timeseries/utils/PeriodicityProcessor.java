@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.datastax.tickdata.Main;
 import com.google.common.primitives.Longs;
 
 public class PeriodicityProcessor {
-
+	private static Logger logger = LoggerFactory.getLogger(PeriodicityProcessor.class);
 	
 	public static TimeSeries getTimeSeriesByPeriod (TimeSeries timeSeries, Periodicity periodicity, long startTime){
 		
@@ -47,6 +50,8 @@ public class PeriodicityProcessor {
 	public static List<Long> createDatesByPeriodicity(Periodicity periodicity, long startTime, TimeSeries timeSeries) {
 		
 		long endTime = timeSeries.getDates()[timeSeries.getDates().length-1];
+		
+		logger.info("Start time " + new DateTime(startTime).toString() + " End Time : " + new DateTime(endTime).toString());
 		
 		List<Long> newDates = new ArrayList<Long>();
 		

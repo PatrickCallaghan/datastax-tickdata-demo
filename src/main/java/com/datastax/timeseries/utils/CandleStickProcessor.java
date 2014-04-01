@@ -19,17 +19,18 @@ public class CandleStickProcessor {
 		double[] oldValues = timeSeries.getValues();
 
 		int counter = 0;
-		double lastValue = 0;
+		double lastValue = oldValues[0];
 		
 		DoubleArrayList doubles = new DoubleArrayList();
-
+		
 		for (int i = 0; i < oldDates.length; i++) {
 
 			long date = oldDates[i];
 			doubles.add(lastValue);
-
-			if (date > candleStickTimePoints.get(counter)){				
+			
+			if (date > candleStickTimePoints.get(counter)){			
 				
+				//Need to create a candlestick for what we have already
 				CandleStick candleStick = createCandleStickFromArrayList(doubles);
 				
 				if (candleStick!=null){
@@ -50,12 +51,12 @@ public class CandleStickProcessor {
 			}
 			
 		}
-		//Add current candle stick.		
+		//Add last candle stick.		
 		CandleStick candleStick = createCandleStickFromArrayList(doubles);
 		candleStick.setStartTime(candleStickTimePoints.get(counter).longValue());
+		
 		if (candleStick!=null)
-		candleStickSeries.addCandleStick(candleStick);
-
+			candleStickSeries.addCandleStick(candleStick);
 
 		return candleStickSeries;
 	}
@@ -63,8 +64,6 @@ public class CandleStickProcessor {
 	public static CandleStick createCandleStickFromArrayList(DoubleArrayList doubles) {
 		if (doubles == null) return null;
 				
-		System.out.println("Creating candlestick from " + doubles.toString());
-		
 		doubles.trimToSize();
 		
 		if (doubles.size() == 0) return null;
@@ -79,5 +78,4 @@ public class CandleStickProcessor {
 				
 		return new CandleStick(high, low, open, close);
 	}
-
 }
