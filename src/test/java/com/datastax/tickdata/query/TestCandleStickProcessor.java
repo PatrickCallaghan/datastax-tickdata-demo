@@ -24,7 +24,7 @@ public class TestCandleStickProcessor {
 				new DateTime(2014, 3, 27, 4, 26).getMillis(), new DateTime(2014, 3, 27, 4, 39).getMillis(),
 				new DateTime(2014, 3, 27, 4, 49).getMillis(), new DateTime(2014, 3, 27, 4, 52).getMillis(),
 				new DateTime(2014, 3, 27, 4, 59).getMillis(), new DateTime(2014, 3, 27, 5, 3).getMillis(),
-				new DateTime(2014, 3, 27, 5, 4).getMillis(), new DateTime(2014, 3, 27, 5, 34).getMillis(),
+				new DateTime(2014, 3, 27, 5, 04).getMillis(), new DateTime(2014, 3, 27, 5, 34).getMillis(),
 				new DateTime(2014, 3, 27, 5, 42).getMillis(), new DateTime(2014, 3, 27, 5, 43).getMillis(),
 				new DateTime(2014, 3, 27, 5, 44).getMillis(), new DateTime(2014, 3, 27, 5, 54).getMillis(),
 				new DateTime(2014, 3, 27, 5, 55).getMillis(), new DateTime(2014, 3, 27, 5, 57).getMillis(),

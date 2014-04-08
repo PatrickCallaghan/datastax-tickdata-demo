@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +60,42 @@ public class TickGenerator {
 			e.printStackTrace();			
 		}
 		flusher.clear();
+	}
+	
+	public void generatorTicksFromNow(BlockingQueue<List<TickData>> queueTickData, long noOfTicks){
+		
+		List<TickData> flusher = new ArrayList<TickData>();
+		
+		DateTime dateTime = DateTime.now();
+
+		for (int i = 0; i < noOfTicks; i++) {
+
+			TickValue tickValue = getTickValueRandom();
+			flusher.add(new TickData(tickValue.tickSymbol, tickValue.value, dateTime));
+			
+			dateTime = dateTime.minusMillis(250);	
+
+			TOTAL_TICKS++;
+
+			if (i % 20 == 0) {
+				try {
+					queueTickData.put(new ArrayList<TickData>(flusher));
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				flusher.clear();
+			}
+			
+			if (i % 10000 == 0){
+				sleepMillis(10);
+			}
+		}
+		try {
+			queueTickData.put(new ArrayList<TickData>(flusher));
+		} catch (InterruptedException e) {
+			e.printStackTrace();			
+		}
+		flusher.clear();	
 	}
 
 	private void sleepMillis(int i) {

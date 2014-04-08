@@ -1,5 +1,7 @@
 package com.datastax.tickdata;
 
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -28,13 +30,15 @@ public class TickDataDao {
 	private static String keyspaceName = "datastax_tickdata_demo";
 	private static String tableNameTick = keyspaceName + ".tick_data";
 
-	private static final String INSERT_INTO_TICK = "Insert into " + tableNameTick + " (symbol,date,value) values (?,now(),?);";
+	private static final String INSERT_INTO_TICK = "Insert into " + tableNameTick + " (symbol,date,value) values (?, maxTimeuuid(?),?);";
 	private static final String SELECT_FROM_TICK_RANGE = "Select symbol, dateOf(date) as date, value from " + tableNameTick + " where symbol = ? and date > maxTimeuuid(?) and date < minTimeuuid(?)";
 	private static final String SELECT_FROM_TICK = "Select symbol, dateOf(date) as date, value from " + tableNameTick + " where symbol = ?";
 
 	private PreparedStatement insertStmtTick;
 	private PreparedStatement selectStmtTick;
 	private PreparedStatement selectRangeStmtTick;
+	
+	private SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.zzz"); 
 
 	public TickDataDao(String[] contactPoints) {
 
@@ -107,15 +111,16 @@ public class TickDataDao {
 		
 		for (TickData tickData : list) {
 			
-			DateTime dateTime = DateTime.now();		
+			DateTime dateTime = tickData.getTime() != null ? tickData.getTime() : DateTime.now();
+			
 			String month = fillNumber(dateTime.getMonthOfYear());
 			String day = fillNumber(dateTime.getDayOfMonth());
 			
 			String symbolWithDate = tickData.getKey() + "-" + dateTime.getYear() + "-" + month + "-" + day;
 			
-			boundStmt.setString("symbol", symbolWithDate);
-			//boundStmt.setDate("date", dateTime.toDate());
-			boundStmt.setDouble("value", tickData.getValue());
+			boundStmt.setString(0, symbolWithDate);
+			boundStmt.setDate(1, new Timestamp(dateTime.getMillis()));
+			boundStmt.setDouble(2, tickData.getValue());
 
 			results.add(session.executeAsync(boundStmt));
 			

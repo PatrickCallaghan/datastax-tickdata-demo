@@ -3,7 +3,6 @@ package com.datastax.timeseries.utils;
 import java.util.LinkedList;
 import java.util.Queue;
 
-
 public class MovingAverage {
 	private final Queue<Double> window = new LinkedList<Double>();
 	private final int period;
