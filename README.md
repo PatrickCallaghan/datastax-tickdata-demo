@@ -5,7 +5,7 @@ This is a simple example of using C* as a tick data store for financial market d
 
 ## Running the demo 
 
-You will need a java runtime (preferably 7) along with maven 3 to run this demo. Start DSE 3.1.X or a cassandra 1.2.X instance on your local machine. This demo just runs as a standalone process on the localhost.
+You will need a java runtime (preferably 7) along with maven 3 to run this demo. Start DSE 4.X or a cassandra 2.X instance on your local machine. This demo just runs as a standalone process on the localhost.
 
 This demo uses quite a lot of memory so it is worth setting the MAVEN_OPTS to run maven with more memory
 
@@ -20,10 +20,12 @@ The queries that we want to be able to run is
      select * from tick_data where symbol ='NASDAQ-NFLX-2014-01-31';
      
      select * from tick_data where symbol ='NASDAQ-NFLX-2014-01-31' and date > '2014-01-01 14:45:00' and date < '2014-01-01 15:00:00';
+	 
+to see what data is there.	
 
 ## Data 
 
-The data is generated from a tick generator which uses a csv file to create random values from AMEX, NYSE and NASDAQ.
+The data is generated from a tick generator which uses a csv file to create random values from AMEX, NYSE and NASDAQ. The data will be down to the millisecond level.
 
 ## Throughput 
 

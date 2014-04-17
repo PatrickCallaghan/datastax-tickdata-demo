@@ -30,9 +30,9 @@ public class TickDataDao {
 	private static String keyspaceName = "datastax_tickdata_demo";
 	private static String tableNameTick = keyspaceName + ".tick_data";
 
-	private static final String INSERT_INTO_TICK = "Insert into " + tableNameTick + " (symbol,date,value) values (?, maxTimeuuid(?),?);";
-	private static final String SELECT_FROM_TICK_RANGE = "Select symbol, dateOf(date) as date, value from " + tableNameTick + " where symbol = ? and date > maxTimeuuid(?) and date < minTimeuuid(?)";
-	private static final String SELECT_FROM_TICK = "Select symbol, dateOf(date) as date, value from " + tableNameTick + " where symbol = ?";
+	private static final String INSERT_INTO_TICK = "Insert into " + tableNameTick + " (symbol,date,value) values (?, ?,?);";
+	private static final String SELECT_FROM_TICK_RANGE = "Select symbol, date as date, value from " + tableNameTick + " where symbol = ? and date > ? and date < ?";
+	private static final String SELECT_FROM_TICK = "Select symbol, date as date, value from " + tableNameTick + " where symbol = ?";
 
 	private PreparedStatement insertStmtTick;
 	private PreparedStatement selectStmtTick;

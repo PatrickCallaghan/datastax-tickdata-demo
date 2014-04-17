@@ -80,7 +80,7 @@ public abstract class RunCQLFile {
 
 	
 	void shutdown() {
-		session.shutdown();
-		cluster.shutdown();
+		session.close();
+		cluster.close();
 	}
 }
