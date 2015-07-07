@@ -107,10 +107,10 @@ public class TickGenerator {
 		}
 	}
 
-	class TickValue {
+	public class TickValue {
 
-		String tickSymbol;
-		double value;
+		public String tickSymbol;
+		public double value;
 
 		public TickValue(String tickSymbol, double value) {
 			super();
@@ -119,7 +119,7 @@ public class TickGenerator {
 		}
 	}
 
-	TickValue getTickValueRandom() {
+	public TickValue getTickValueRandom() {
 
 		TickValue tickValue = tickValueList.get((int) (Math.random() * tickValueList.size()));
 		tickValue.value = this.createRandomValue(tickValue.value);

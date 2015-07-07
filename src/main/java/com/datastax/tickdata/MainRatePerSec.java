@@ -3,23 +3,23 @@ package com.datastax.tickdata;
 import java.text.NumberFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.datastax.demo.utils.PropertyHelper;
 import com.datastax.demo.utils.Timer;
 import com.datastax.tickdata.engine.TickGenerator;
+import com.datastax.tickdata.engine.TickGenerator.TickValue;
 import com.datastax.tickdata.model.TickData;
 
-public class Main {
-	private static Logger logger = LoggerFactory.getLogger(Main.class);
+public class MainRatePerSec {
+	private static Logger logger = LoggerFactory.getLogger(MainRatePerSec.class);
 
 	private String ONE_MILLION = "1000000";
 	private String TEN_MILLION = "10000000";
@@ -27,29 +27,20 @@ public class Main {
 	private String ONE_HUNDRED_MILLION = "100000000";
 	private String ONE_BILLION = "1000000000";
 
-	public Main() {
+	public MainRatePerSec() {
 
 		String contactPointsStr = PropertyHelper.getProperty("contactPoints", "localhost");
-		String noOfThreadsStr = PropertyHelper.getProperty("noOfThreads", "10");
+		String ratePerSecStr = PropertyHelper.getProperty("ratePerSec", "1000");
 		String noOfTicksStr = PropertyHelper.getProperty("noOfTicks", ONE_MILLION);
 		
 		TickDataDao dao = new TickDataDao(contactPointsStr.split(","));
 		
-		int noOfThreads = Integer.parseInt(noOfThreadsStr);
-		long noOfTicks = Long.parseLong(noOfTicksStr);		
-		//Create shared queue 
-		BlockingQueue<List<TickData>> queueTickData = new ArrayBlockingQueue<List<TickData>>(10000);
-		
-		//Executor for Threads
-		ExecutorService executor = Executors.newFixedThreadPool(noOfThreads);
+		long noOfTicks = Long.parseLong(noOfTicksStr);
+		int ratePerSec = Integer.parseInt(ratePerSecStr);
 		Timer timer = new Timer();
 		timer.start();
 			
-		logger.info("Processing " + NumberFormat.getInstance().format(noOfTicks) + " ticks with " + noOfThreads + " threads");
-		
-		for (int i = 0; i < noOfThreads; i++) {
-			executor.execute(new TickDataWriter(dao, queueTickData));
-		}
+		logger.info("Processing " + NumberFormat.getInstance().format(noOfTicks) + " ticks");
 		
 		//Load the symbols
 		DataLoader dataLoader = new DataLoader ();
@@ -58,12 +49,18 @@ public class Main {
 		//Start the tick generator
 		TickGenerator tickGenerator = new TickGenerator(exchangeSymbols);
 		
-		startLogging(tickGenerator, queueTickData);			
-		tickGenerator.generatorTicks(queueTickData, noOfTicks);
 		
-		while(!queueTickData.isEmpty() ){
-			sleep(1);
-		}		
+		for (int i=0; i < noOfTicks; i++){
+			DateTime dateTime = DateTime.now();
+			
+			TickValue tickValue = tickGenerator.getTickValueRandom();
+			try {
+				dao.insertTickData(new TickData(tickValue.tickSymbol, tickValue.value, dateTime));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			sleep(1000/ratePerSec);
+		}
 		
 		timer.end();
 		logger.info("Data Loading took " + timer.getTimeTakenSeconds() + " secs. Total Points " + dao.getTotalPoints() + " (" + (dao.getTotalPoints()/timer.getTimeTakenSeconds()) + " a sec)");
@@ -110,9 +107,9 @@ public class Main {
 		}
 	}
 	
-	private void sleep(int seconds) {
+	private void sleep(int millis) {
 		try {
-			Thread.sleep(seconds * 1000);
+			Thread.sleep(millis);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
@@ -122,6 +119,6 @@ public class Main {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		new Main();
+		new MainRatePerSec();
 	}
 }

@@ -20,6 +20,8 @@ import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.SimpleStatement;
+import com.datastax.driver.core.Statement;
 import com.datastax.tickdata.model.TickData;
 import com.datastax.timeseries.utils.TimeSeries;
 
@@ -34,6 +36,8 @@ public class TickDataDao {
 	private static final String SELECT_FROM_TICK_RANGE = "Select symbol, date as date, value from " + tableNameTick + " where symbol = ? and date > ? and date < ?";
 	private static final String SELECT_FROM_TICK = "Select symbol, date as date, value from " + tableNameTick + " where symbol = ?";
 
+	private static final String SELECT_ALL = "Select * from " + tableNameTick;
+	
 	private PreparedStatement insertStmtTick;
 	private PreparedStatement selectStmtTick;
 	private PreparedStatement selectRangeStmtTick;
@@ -104,6 +108,25 @@ public class TickDataDao {
 		
 		return new TimeSeries(symbol, dates.elements(), values.elements());
 	}
+	
+	public void insertTickData(TickData tickData) throws Exception{
+		
+		BoundStatement boundStmt = new BoundStatement(this.insertStmtTick);		
+		DateTime dateTime = tickData.getTime() != null ? tickData.getTime() : DateTime.now();
+		
+		String month = fillNumber(dateTime.getMonthOfYear());
+		String day = fillNumber(dateTime.getDayOfMonth());
+		
+		String symbolWithDate = tickData.getKey() + "-" + dateTime.getYear() + "-" + month + "-" + day;
+		
+		boundStmt.setString(0, symbolWithDate);
+		boundStmt.setDate(1, new Timestamp(dateTime.getMillis()));
+		boundStmt.setDouble(2, tickData.getValue());
+
+		session.executeAsync(boundStmt);
+			
+		TOTAL_POINTS.incrementAndGet();				
+	}
 
 	public void insertTickData(List<TickData> list) throws Exception{
 		BoundStatement boundStmt = new BoundStatement(this.insertStmtTick);
@@ -127,21 +150,22 @@ public class TickDataDao {
 			TOTAL_POINTS.incrementAndGet();			
 		}
 		
-		//Wait till we have everything back.
-		boolean wait = true;
-		while (wait) {
-			// start with getting out, if any results are not done, wait is
-			// true.
-			wait = false;
-			for (ResultSetFuture result : results) {
-				if (!result.isDone()) {
-					wait = true;
-					break;
-				}
-			}
+		for (ResultSetFuture future : results) {
+			future.getUninterruptibly();
 		}
-		
 		return;
+	}
+	
+	public void selectAllHistoricData(int fetchSize){
+		Statement stmt = new SimpleStatement(SELECT_ALL);
+		stmt.setFetchSize(fetchSize);
+		ResultSet rs = session.execute(stmt);
+		
+		Iterator<Row> iterator = rs.iterator();
+		
+		while (iterator.hasNext()){
+			iterator.next().getDouble("value");
+		}		
 	}
 
 	private String fillNumber(int num) {

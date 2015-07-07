@@ -22,12 +22,10 @@ public class DataLoader {
 	
 	private static final CharSequence EXCHANGEDATA = "exchangedata";
 
-	private BlockingQueue<List<TickData>> queueTickData;
 
-	public DataLoader(BlockingQueue<List<TickData>> queueTickData) {
-		this.queueTickData = queueTickData;
+	public DataLoader() {
 	}
-
+	
 	public List<String> getExchangeData() {
 
 		List<String> allExchangeSymbols = new ArrayList<String>();
