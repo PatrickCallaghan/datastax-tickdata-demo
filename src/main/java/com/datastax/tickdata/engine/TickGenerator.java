@@ -39,8 +39,6 @@ public class TickGenerator {
 			TickValue tickValue = getTickValueRandom();
 			flusher.add(new TickData(tickValue.tickSymbol, tickValue.value));
 
-			TOTAL_TICKS++;
-
 			if (i % 20 == 0) {
 				try {
 					queueTickData.put(new ArrayList<TickData>(flusher));
@@ -73,9 +71,7 @@ public class TickGenerator {
 			TickValue tickValue = getTickValueRandom();
 			flusher.add(new TickData(tickValue.tickSymbol, tickValue.value, dateTime));
 			
-			dateTime = dateTime.minusMillis(250);	
-
-			TOTAL_TICKS++;
+			dateTime = dateTime.minusMillis(250);		
 
 			if (i % 20 == 0) {
 				try {
@@ -120,9 +116,11 @@ public class TickGenerator {
 	}
 
 	public TickValue getTickValueRandom() {
-
+		
+		
 		TickValue tickValue = tickValueList.get((int) (Math.random() * tickValueList.size()));
 		tickValue.value = this.createRandomValue(tickValue.value);
+		TOTAL_TICKS++;
 		return tickValue;
 	}
 

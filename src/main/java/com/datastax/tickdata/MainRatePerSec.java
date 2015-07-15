@@ -48,8 +48,7 @@ public class MainRatePerSec {
 		
 		//Start the tick generator
 		TickGenerator tickGenerator = new TickGenerator(exchangeSymbols);
-		
-		
+		startLogging(tickGenerator);
 		for (int i=0; i < noOfTicks; i++){
 			DateTime dateTime = DateTime.now();
 			
@@ -68,14 +67,13 @@ public class MainRatePerSec {
 		System.exit(0);
 	}
 	
-	private void startLogging(final TickGenerator tickGenerator, final BlockingQueue<List<TickData>> queueTickData) {
+	private void startLogging(final TickGenerator tickGenerator) {
 		ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(5);
 
 		scheduledExecutorService.scheduleWithFixedDelay(new Runnable() {
 			@Override
 			public void run() {
 				logger.info(new Date().toString() + "-Generated " + tickGenerator.getTicksGenerated() + " ticks");
-				logger.info("Messages left to send " + (queueTickData.size()));
 			}
 		}, 1, 5, TimeUnit.SECONDS);		
 	}
