@@ -3,11 +3,18 @@ package com.datastax.tickdata;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cern.colt.list.DoubleArrayList;
 import cern.colt.list.LongArrayList;
@@ -15,6 +22,7 @@ import cern.colt.list.LongArrayList;
 import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ConsistencyLevel;
+import com.datastax.driver.core.Host;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.ResultSetFuture;
@@ -22,11 +30,17 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SimpleStatement;
 import com.datastax.driver.core.Statement;
+import com.datastax.driver.core.policies.LatencyAwarePolicy;
+import com.datastax.driver.core.policies.LatencyAwarePolicy.Snapshot;
+import com.datastax.driver.core.policies.LatencyAwarePolicy.Snapshot.Stats;
+import com.datastax.driver.core.policies.Policies;
 import com.datastax.tickdata.model.TickData;
 import com.datastax.timeseries.utils.TimeSeries;
 
 public class TickDataDao {
-
+	
+	private static Logger logger = LoggerFactory.getLogger(TickDataDao.class);
+	
 	private AtomicLong TOTAL_POINTS = new AtomicLong(0);
 	private Session session;
 	private static String keyspaceName = "datastax_tickdata_demo";
@@ -42,11 +56,34 @@ public class TickDataDao {
 	private PreparedStatement selectStmtTick;
 	private PreparedStatement selectRangeStmtTick;
 	
+	private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+	
 	private SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.zzz"); 
 
 	public TickDataDao(String[] contactPoints) {
 
-		Cluster cluster = Cluster.builder().addContactPoints(contactPoints).build();
+		final LatencyAwarePolicy latencyPolicy = LatencyAwarePolicy.builder(Policies.defaultLoadBalancingPolicy()).build();
+		
+		final Cluster cluster = Cluster.builder()
+				.addContactPoints(contactPoints)
+				.withLoadBalancingPolicy(latencyPolicy)
+				.build();
+		
+		executorService.scheduleAtFixedRate(new Runnable(){
+
+			@Override
+			public void run() {
+				Snapshot scoresSnapshot = latencyPolicy.getScoresSnapshot();
+				
+				Map<Host, Stats> statsMap = scoresSnapshot.getAllStats();
+				
+				for (Host host : statsMap.keySet()){
+					
+					Stats stats = statsMap.get(host);					
+					logger.info(host.getAddress() + " - Score:" + stats.getLatencyScore() + ", Count:" + stats.getMeasurementsCount() + ", Last updated:" + new Date(stats.lastUpdatedSince()));
+				}
+			}
+		}, 5, 5, TimeUnit.SECONDS);
 		
 		this.session = cluster.connect();
 
