@@ -80,7 +80,7 @@ public class TickDataDao {
 				for (Host host : statsMap.keySet()){
 					
 					Stats stats = statsMap.get(host);					
-					logger.info(host.getAddress() + " - Score:" + stats.getLatencyScore() + ", Count:" + stats.getMeasurementsCount() + ", Last updated:" + new Date(stats.lastUpdatedSince()));
+					logger.info(host.getAddress() + " - Score:" + stats.getLatencyScore() + ", Count:" + stats.getMeasurementsCount() + ", Last updated:" + stats.lastUpdatedSince());
 				}
 			}
 		}, 5, 5, TimeUnit.SECONDS);
