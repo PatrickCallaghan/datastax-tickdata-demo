@@ -35,6 +35,7 @@ import com.datastax.driver.core.policies.LatencyAwarePolicy.Snapshot;
 import com.datastax.driver.core.policies.LatencyAwarePolicy.Snapshot.Stats;
 import com.datastax.driver.core.policies.Policies;
 import com.datastax.tickdata.model.TickData;
+import com.datastax.timeseries.utils.AsyncWriterWrapper;
 import com.datastax.timeseries.utils.TimeSeries;
 
 public class TickDataDao {
@@ -58,7 +59,9 @@ public class TickDataDao {
 	
 	private ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 	
-	private SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.zzz"); 
+	private SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss.zzz");
+
+	private boolean executeAsync; 
 
 	public TickDataDao(String[] contactPoints) {
 
@@ -167,7 +170,7 @@ public class TickDataDao {
 
 	public void insertTickData(List<TickData> list) throws Exception{
 		BoundStatement boundStmt = new BoundStatement(this.insertStmtTick);
-		List<ResultSetFuture> results = new ArrayList<ResultSetFuture>();
+		AsyncWriterWrapper writer = new AsyncWriterWrapper();
 		
 		for (TickData tickData : list) {
 			
@@ -182,14 +185,18 @@ public class TickDataDao {
 			boundStmt.setDate(1, new Timestamp(dateTime.getMillis()));
 			boundStmt.setDouble(2, tickData.getValue());
 
-			results.add(session.executeAsync(boundStmt));
+			writer.addStatement(boundStmt);
 			
 			TOTAL_POINTS.incrementAndGet();			
 		}
-		
-		for (ResultSetFuture future : results) {
-			future.getUninterruptibly();
+	
+		while (!writer.executeAsync(session)){
+			//Retry
+			if (writer.exhausted()){
+				logger.error("Aborting due to error : " + writer.getException().getMessage());
+			}
 		}
+		
 		return;
 	}
 	

@@ -39,7 +39,7 @@ public class TickGenerator {
 			TickValue tickValue = getTickValueRandom();
 			flusher.add(new TickData(tickValue.tickSymbol, tickValue.value));
 
-			if (i % 20 == 0) {
+			if (i % 50 == 0) {
 				try {
 					queueTickData.put(new ArrayList<TickData>(flusher));
 				} catch (InterruptedException e) {
